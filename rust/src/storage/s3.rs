@@ -458,7 +458,11 @@ impl ObjectStore for S3StorageBackend {
     async fn rename_if_not_exists(&self, from: &Path, to: &Path) -> ObjectStoreResult<()> {
         let lock_client = match self.s3_lock_client {
             Some(ref lock_client) => lock_client,
-            None => return Err(S3LockError::LockClientRequired.into()),
+            None => {
+                //return Err(S3LockError::LockClientRequired.into()),
+                self.rename_no_replace(from, to).await?;
+                return Ok(())
+            }
         };
         lock_client.rename_with_lock(self, from, to).await?;
         Ok(())
